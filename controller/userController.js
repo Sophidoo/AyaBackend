@@ -1,4 +1,9 @@
 import User from "../model/users/UserModel.js";
+import bcrypt from "bcrypt";
+import generateToken from "../util/generatetoken.js";
+import {obtainTokenFromHeader} from "../util/obtaintokenfromheader.js";
+// import obtainTokenFromHeader from "../util/obtaintokenfromheader.js";
+
 
 
 export const userRegisterController = async(req, res) => {
@@ -6,13 +11,19 @@ export const userRegisterController = async(req, res) => {
     try{
         const userFound = await User.findOne({email});
         if(userFound){
-            return res.json({message: "User Already exist"})
+            return res.json({
+                status: "error",
+                data: "User Already exist"
+            })
         }
+
+        const salt = await bcrypt.genSalt(10);
+        const passwordhash = await bcrypt.hash(password, salt)
         const user = await User.create({
             firstname, 
             lastname, 
             email, 
-            password
+            password: passwordhash
         })
 
         res.json({
@@ -24,22 +35,70 @@ export const userRegisterController = async(req, res) => {
     }
 }
 
+// Login User
 export const userLoginController = async(req, res) => {
+    const {email, password} = req.body;
+    // console.log(req.headers); 
+    
     try{
-        res.json({
-            status: "success",
-            data: "Your details has successfully logged in"
-        });
+        const foundUser = await User.findOne({email});
+        
+        if(!foundUser){
+            return res.json({
+                status: "error",
+                message: "Wrong login details"
+            })
+        }
+        
+        const foundPassword = await bcrypt.compare(password, foundUser.password)
+        if(!foundPassword){
+            res.json({
+                status: "error",
+                message: "Wrong login details"
+            })
+        }else{
+            res.json({
+                status: "success",
+                data: {
+                    firstname: foundUser.firstname,
+                    lastname: foundUser.lastname,
+                    email: foundUser.email,
+                    token: generateToken(foundUser._id)
+                }
+            });
+        }
     }catch(error){
         res.json(error.message)
     }
 }
 
-export const getUserController = async(req, res) => {
+//get speific user
+export const getUserByIdController = async(req, res) => { 
+    try{
+        console.log(req.userAuth);
+        const foundUser = await User.findById(req.userAuth);
+        if(foundUser){
+            res.json({
+                status: "Success",
+                data: {foundUser}
+            });
+        }else{
+            res.json({
+                status: "Success",
+                message: "User with such id does not exist"
+            });
+        }
+    }catch(error){
+        res.json(error.message)
+    }
+}
+
+export const getAllUserController = async(req, res) => {
+    const allUsers = await User.find()
     try{
         res.json({
             status: "success",
-            data: "get user by id"
+            data: {allUsers}
         });
     }catch(error){
         res.json(error.message)

@@ -22,5 +22,5 @@ app.use("/api/v1/users", userRoute)
 //error handlers
 //listen server
 
-const PORT = process.env.Port || 3000;
+const PORT = process.env.Port || 3100;
 app.listen(PORT,console.log(`Server is running at ${PORT}`))
