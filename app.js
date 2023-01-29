@@ -15,12 +15,8 @@ app.use(express.json())
 //login
 app.use("/api/v1/users", userRoute)
 
-
-
-
-
 //error handlers
 //listen server
 
-const PORT = process.env.Port;
+const PORT = process.env.PORT;
 app.listen(PORT,console.log(`Server is running at ${PORT}`))
